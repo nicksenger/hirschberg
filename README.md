@@ -1,6 +1,6 @@
 # Hirschberg
 
-Hirschberg provides a generic implementation of the Hirschberg algorithm for finding the optimal global alignment of two sequences. 
+Hirschberg provides a generic implementation of Hirschberg's algorithm for finding the optimal global alignment of two sequences. 
 
 Example usage:
 
@@ -26,7 +26,7 @@ assert_eq!(
 );
 ```
 
-The match, mismatch and gap contribution to the distance may be configured:
+The match, mismatch and gap contribution to the score may be configured:
 
 ```rust
 let a = "ACCCGGTCGTCAATTA".chars().collect::<Vec<_>>();
