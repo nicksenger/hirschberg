@@ -13,7 +13,7 @@ let output = hirschberg::Config::default().compute(&a, &b);
 let (aligned_a, aligned_b): (String, String) = output
     .alignment()
     .iter()
-    .map(|[a, b]| (a.copied().unwrap_or('_'), b.copied().unwrap_or('_')))
+    .map(|(a, b)| (a.copied().unwrap_or('_'), b.copied().unwrap_or('_')))
     .unzip();
 
 assert_eq!(output.score(), 8);
@@ -37,7 +37,7 @@ let output = hirschberg::Config::default().mismatch_score(-4).compute(&a, &b);
 let (aligned_a, aligned_b): (String, String) = output
     .alignment()
     .iter()
-    .map(|[a, b]| (a.copied().unwrap_or('_'), b.copied().unwrap_or('_')))
+    .map(|(a, b)| (a.copied().unwrap_or('_'), b.copied().unwrap_or('_')))
     .unzip();
 
 assert_eq!(output.score(), 6);

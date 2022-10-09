@@ -1,17 +1,17 @@
 /// Output from the Hirschberg algorithm containing an optimal
 /// global alignment and distance between two sequences.
 #[derive(Debug, PartialEq, Eq)]
-pub struct Output<'a, T> {
-    alignment: Vec<[Option<&'a T>; 2]>,
+pub struct Output<'a, T, U> {
+    alignment: Vec<(Option<&'a T>, Option<&'a U>)>,
     score: i32,
 }
 
-impl<'a, T> Output<'a, T> {
-    /// Returns a slice of the optimal alignment. Each item is an array containing
-    /// an element from sequence `a` or gap (indicated by `None`) at index 0, and
-    /// an element from sequence `b` or gap at index 1. The ordering of the original
+impl<'a, T, U> Output<'a, T, U> {
+    /// Returns a slice of the optimal alignment. Each item is a tuple containing
+    /// an element from sequence `a` or gap (indicated by `None`) at position 0, and
+    /// an element from sequence `b` or gap at position 1. The ordering of the original
     /// sequences `a` and `b` is preserved.
-    pub fn alignment(&self) -> &[[Option<&'a T>; 2]] {
+    pub fn alignment(&self) -> &[(Option<&'a T>, Option<&'a U>)] {
         &self.alignment
     }
 
@@ -66,12 +66,12 @@ impl Config {
         self
     }
 
-    pub fn compute<'a, T: PartialEq>(self, a: &'a [T], b: &'a [T]) -> Output<'a, T> {
+    pub fn compute<'a, T: PartialEq<U>, U: PartialEq<T>>(self, a: &'a [T], b: &'a [U]) -> Output<'a, T, U> {
         if a.is_empty() {
             Output {
                 alignment: std::iter::repeat(None)
                     .zip(b.iter().map(Option::Some))
-                    .map(|(a, b)| [a, b])
+                    .map(|(a, b)| (a, b))
                     .collect(),
                 score: b.len() as i32 * self.gap_score,
             }
@@ -81,7 +81,7 @@ impl Config {
                     .iter()
                     .map(Option::Some)
                     .zip(std::iter::repeat(None))
-                    .map(|(a, b)| [a, b])
+                    .map(|(a, b)| (a, b))
                     .collect(),
                 score: a.len() as i32 * self.gap_score,
             }
@@ -109,7 +109,7 @@ impl Config {
         }
     }
 
-    fn nw_score<T: PartialEq>(&self, a: &[T], b: &[T], reversed: bool) -> Vec<i32> {
+    fn nw_score<T: PartialEq<U>, U: PartialEq<T>>(&self, a: &[T], b: &[U], reversed: bool) -> Vec<i32> {
         let mut row_1 = vec![0];
         let mut row_2 = vec![];
 
@@ -135,7 +135,7 @@ impl Config {
         row_1
     }
 
-    fn replace<T: PartialEq>(&self, x: &T, y: &T) -> i32 {
+    fn replace<T: PartialEq<U>, U: PartialEq<T>>(&self, x: &T, y: &U) -> i32 {
         if x == y {
             self.match_score
         } else {
@@ -143,7 +143,7 @@ impl Config {
         }
     }
 
-    fn needleman_wunsch<'a, T: PartialEq>(self, a: &'a [T], b: &'a [T]) -> Output<'a, T> {
+    fn needleman_wunsch<'a, T: PartialEq<U>, U: PartialEq<T>>(self, a: &'a [T], b: &'a [U]) -> Output<'a, T, U> {
         let mut dp: Vec<Vec<Cell>> = (0..=b.len())
             .map(|row| {
                 (0..=a.len())
@@ -175,12 +175,12 @@ impl Config {
             }
         }
 
-        let mut alignment: Vec<[Option<&T>; 2]> = vec![];
+        let mut alignment: Vec<(Option<&T>, Option<&U>)> = vec![];
         let mut y = dp.len() - 1;
         let mut x = dp[y].len() - 1;
         let score = dp[y][x].score;
         while let Some(prev) = dp[y][x].prev {
-            alignment.push([
+            alignment.push((
                 if dp[y][x].col - dp[prev.0][prev.1].col == 1 {
                     Some(&a[dp[y][x].col - 1])
                 } else {
@@ -191,7 +191,7 @@ impl Config {
                 } else {
                     None
                 },
-            ]);
+            ));
 
             y = prev.0;
             x = prev.1;
@@ -201,13 +201,13 @@ impl Config {
         Output { alignment, score }
     }
 
-    fn fill_cell<T: PartialEq>(
+    fn fill_cell<T: PartialEq<U>, U: PartialEq<T>>(
         &self,
         dp: &mut [Vec<Cell>],
         y: usize,
         x: usize,
         a: &[T],
-        b: &[T],
+        b: &[U],
     ) {
         let row_space_score = dp[y - 1][x].score + self.gap_score;
         let col_space_score = dp[y][x - 1].score + self.gap_score;
@@ -292,7 +292,7 @@ mod test {
             let (aligned_a, aligned_b): (String, String) = output
                 .alignment()
                 .iter()
-                .map(|[a, b]| (a.copied().unwrap_or('_'), b.copied().unwrap_or('_')))
+                .map(|(a, b)| (a.copied().unwrap_or('_'), b.copied().unwrap_or('_')))
                 .unzip();
 
             assert_eq!(output.score(), expected_score);
