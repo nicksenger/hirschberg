@@ -66,7 +66,7 @@ impl Config {
         self
     }
 
-    pub fn compute<'a, T: PartialEq + std::fmt::Debug>(self, a: &'a [T], b: &'a [T]) -> Output<'a, T> {
+    pub fn compute<'a, T: PartialEq>(self, a: &'a [T], b: &'a [T]) -> Output<'a, T> {
         if a.is_empty() {
             Output {
                 alignment: std::iter::repeat(None)
