@@ -66,12 +66,15 @@ impl Config {
         self
     }
 
-    pub fn compute<'a, T: PartialEq<U>, U: PartialEq<T>>(self, a: &'a [T], b: &'a [U]) -> Output<'a, T, U> {
+    pub fn compute<'a, T: PartialEq<U>, U: PartialEq<T>>(
+        self,
+        a: &'a [T],
+        b: &'a [U],
+    ) -> Output<'a, T, U> {
         if a.is_empty() {
             Output {
                 alignment: std::iter::repeat(None)
                     .zip(b.iter().map(Option::Some))
-                    .map(|(a, b)| (a, b))
                     .collect(),
                 score: b.len() as i32 * self.gap_score,
             }
@@ -81,7 +84,6 @@ impl Config {
                     .iter()
                     .map(Option::Some)
                     .zip(std::iter::repeat(None))
-                    .map(|(a, b)| (a, b))
                     .collect(),
                 score: a.len() as i32 * self.gap_score,
             }
@@ -109,7 +111,12 @@ impl Config {
         }
     }
 
-    fn nw_score<T: PartialEq<U>, U: PartialEq<T>>(&self, a: &[T], b: &[U], reversed: bool) -> Vec<i32> {
+    fn nw_score<T: PartialEq<U>, U: PartialEq<T>>(
+        &self,
+        a: &[T],
+        b: &[U],
+        reversed: bool,
+    ) -> Vec<i32> {
         let mut row_1 = vec![0];
         let mut row_2 = vec![];
 
@@ -143,7 +150,11 @@ impl Config {
         }
     }
 
-    fn needleman_wunsch<'a, T: PartialEq<U>, U: PartialEq<T>>(self, a: &'a [T], b: &'a [U]) -> Output<'a, T, U> {
+    fn needleman_wunsch<'a, T: PartialEq<U>, U: PartialEq<T>>(
+        self,
+        a: &'a [T],
+        b: &'a [U],
+    ) -> Output<'a, T, U> {
         let mut dp: Vec<Vec<Cell>> = (0..=b.len())
             .map(|row| {
                 (0..=a.len())
